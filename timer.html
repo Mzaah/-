@@ -37,7 +37,7 @@
             transition: color 0.5s ease;
         }
 
-        label, select, button {
+        label, select, button, p {
             font-size: 1.2em;
             color: #2e2e2e;
         }
@@ -89,13 +89,16 @@
     </div>
 
     <h1 id="timer-display">00:00</h1>
-    <p id="instruction">Press space to end alarm</p>
     <audio id="alarm-sound" src="audio.mp3" preload="auto"></audio>
+    <p id="instruction">Press space to pause/resume alarm</p>
 </div>
 
 <script>
     let countdown;
     let hideTimeout;
+    let timerRunning = false;
+    let isPaused = false;
+    let timeRemaining;
     const alarmSound = document.getElementById('alarm-sound');
     const timerDisplay = document.getElementById('timer-display');
     const controls = document.getElementById('controls');
@@ -104,12 +107,16 @@
     function startTimer() {
         const selectElement = document.getElementById('minutes');
         const selectedMinutes = parseFloat(selectElement.value);
-        let timeRemaining = Math.floor(selectedMinutes * 60); // Convert to seconds
+        if (!timerRunning) {
+            timeRemaining = Math.floor(selectedMinutes * 60); // Convert to seconds
+        }
 
-        clearInterval(countdown);
+        if (countdown) clearInterval(countdown);
         timerDisplay.classList.remove('blink'); // Stop blinking when a new timer is started
 
         countdown = setInterval(() => {
+            if (isPaused || !timerRunning) return; // Exit if timer is paused or not running
+
             const minutes = Math.floor(timeRemaining / 60);
             const seconds = timeRemaining % 60;
             timerDisplay.textContent =
@@ -119,10 +126,13 @@
                 clearInterval(countdown);
                 timerDisplay.classList.add('blink');
                 playAlarm();
+                timerRunning = false; // Stop the timer
             }
 
             timeRemaining--;
         }, 1000);
+
+        timerRunning = true;
 
         hideTimeout = setTimeout(() => {
             controls.classList.add('hidden');
@@ -141,6 +151,20 @@
         alarmSound.currentTime = 0;
     }
 
+    function toggleTimer() {
+        if (timerRunning) {
+            if (isPaused) {
+                // Resume timer
+                isPaused = false;
+                startTimer();
+            } else {
+                // Pause timer
+                clearInterval(countdown);
+                isPaused = true;
+            }
+        }
+    }
+
     document.addEventListener('mousemove', () => {
         controls.classList.remove('hidden');
         instruction.classList.remove('hidden');
@@ -155,11 +179,11 @@
 
     document.addEventListener('keydown', (event) => {
         if (event.code === 'Space') {
-            stopAlarm();
+            toggleTimer();
+            stopAlarm(); // Optionally stop alarm when space is pressed
         }
     });
 </script>
 
 </body>
 </html>
-
