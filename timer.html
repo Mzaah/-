@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Countdown Timer - Liam M</title>
+    <title>Countdown Timer</title>
     <link rel="icon" href="stop.png" type="image/png">
     <style>
         body {
@@ -19,6 +19,15 @@
         #timer-container {
             text-align: center;
             position: relative;
+        }
+
+        #controls {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        #controls.hidden {
+            opacity: 0;
         }
 
         h1 {
@@ -46,15 +55,6 @@
             background-color: #1c1c1c;
         }
 
-        #controls {
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-
-        #controls.hidden {
-            opacity: 0;
-        }
-
         @keyframes blink {
             0%, 100% { color: #ff4c4c; } /* Off red */
             50% { color: #2e2e2e; } /* Off black */
@@ -64,16 +64,10 @@
             animation: blink 1s infinite;
         }
 
-        #message {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #ff4c4c; /* Off red */
-            color: #ffffff;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
+        p {
+            font-size: 0.8em;
+            color: #d3d3d3; /* Light grey */
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -95,14 +89,17 @@
     </div>
 
     <h1 id="timer-display">00:00</h1>
+    <p id="instruction">Press space to end alarm</p>
     <audio id="alarm-sound" src="audio.mp3" preload="auto"></audio>
-    <div id="message">Sound will stop if you press the spacebar.</div>
 </div>
 
 <script>
     let countdown;
     let hideTimeout;
-    let alarmSound = document.getElementById('alarm-sound');
+    const alarmSound = document.getElementById('alarm-sound');
+    const timerDisplay = document.getElementById('timer-display');
+    const controls = document.getElementById('controls');
+    const instruction = document.getElementById('instruction');
 
     function startTimer() {
         const selectElement = document.getElementById('minutes');
@@ -110,16 +107,17 @@
         let timeRemaining = Math.floor(selectedMinutes * 60); // Convert to seconds
 
         clearInterval(countdown);
+        timerDisplay.classList.remove('blink'); // Stop blinking when a new timer is started
 
         countdown = setInterval(() => {
             const minutes = Math.floor(timeRemaining / 60);
             const seconds = timeRemaining % 60;
-            document.getElementById('timer-display').textContent =
+            timerDisplay.textContent =
                 `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
             if (timeRemaining === 0) {
                 clearInterval(countdown);
-                document.getElementById('timer-display').classList.add('blink');
+                timerDisplay.classList.add('blink');
                 playAlarm();
             }
 
@@ -127,12 +125,15 @@
         }, 1000);
 
         hideTimeout = setTimeout(() => {
-            document.getElementById('controls').classList.add('hidden');
+            controls.classList.add('hidden');
+            instruction.classList.add('hidden');
         }, 3000);
     }
 
     function playAlarm() {
-        alarmSound.play();
+        alarmSound.play().catch(error => {
+            console.error("Audio play error:", error);
+        });
     }
 
     function stopAlarm() {
@@ -141,30 +142,24 @@
     }
 
     document.addEventListener('mousemove', () => {
-        document.getElementById('controls').classList.remove('hidden');
+        controls.classList.remove('hidden');
+        instruction.classList.remove('hidden');
 
         clearTimeout(hideTimeout);
 
         hideTimeout = setTimeout(() => {
-            document.getElementById('controls').classList.add('hidden');
+            controls.classList.add('hidden');
+            instruction.classList.add('hidden');
         }, 3000);
     });
 
     document.addEventListener('keydown', (event) => {
         if (event.code === 'Space') {
             stopAlarm();
-            showMessage();
         }
     });
-
-    function showMessage() {
-        const message = document.getElementById('message');
-        message.style.display = 'block';
-        setTimeout(() => {
-            message.style.display = 'none';
-        }, 3000);
-    }
 </script>
 
 </body>
 </html>
+
